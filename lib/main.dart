@@ -80,13 +80,13 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       if (currentPositionInSeconds < timeInSeconds) {
         break;
       }
-      totalHeight += 60.0; // Height of ListTile, you may adjust based on your UI
+      totalHeight += 45; // Height of ListTile, you may adjust based on your UI
     }
 
-    double targetScrollOffset = totalHeight - (listViewHeight / 1);
+    double targetScrollOffset = totalHeight - (listViewHeight / 3);
 
     if (targetScrollOffset > endPositionThreshold &&
-        targetScrollOffset < _scrollController.position.maxScrollExtent - endPositionThreshold) {
+        targetScrollOffset < _scrollController.position.maxScrollExtent) {
       _scrollController.animateTo(
         targetScrollOffset,
         duration: Duration(milliseconds: 500),
@@ -105,7 +105,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: NetworkImage(
-                "https://anhcuoiviet.vn/wp-content/uploads/2022/11/background-dep-0.jpg"),
+                "https://i.pinimg.com/originals/73/f0/2f/73f02fa0f38b187a3eac7add63690a71.jpg"),
             fit: BoxFit.cover,
           ),
         ),
@@ -113,7 +113,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             SizedBox(
-              height: 200,
+              height: 250,
               child: Align(
                 alignment: Alignment.center,
                 child: ListView.builder(
@@ -121,40 +121,70 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                   physics: AlwaysScrollableScrollPhysics(),
                   itemCount: lyrics.length,
                   itemBuilder: (context, index) {
-                    final children = lyrics[index]
-                        .findElements('i')
-                        .map((e) => utf8.decode(e.text.codeUnits))
-                        .toList();
-                    double timeInSeconds = double.parse(
-                      lyrics[index].findElements('i').first.getAttribute('va') ?? "0",
-                    );
-                    bool isHighlighted =
-                        position.inMilliseconds >= timeInSeconds * 1000;
-                    final textSpans = <TextSpan>[];
-                    for (int i = 0; i < children.length; i++) {
-                      textSpans.add(
-                        TextSpan(
-                          text: children[i],
-                          style: TextStyle(
-                            color: (position.inMilliseconds >= timeInSeconds * 1000)
-                                ? Colors.orange
-                                : Colors.white,
-                          ),
-                        ),
+                    // final children = lyrics[index]
+                    //     .findElements('i')
+                    //     .map((e) => utf8.decode(e.text.codeUnits))
+                    //     .toList();
+                    final listTime = [];
+                    final listLyric = [];
+                    List<Map<String, String>> combinedList = [];
+                    for (final item in lyrics[index].findElements("i")) {
+                      listLyric.add(utf8.decode(item.text.codeUnits));
+                      listTime.add(
+                        item.getAttribute('va') ?? "0",
                       );
                     }
-                    return ListTile(
-                      title: RichText(
-                        text: TextSpan(
-                          style: DefaultTextStyle.of(context).style,
-                          children: textSpans,
-                        ),
+                    for (int i = 0; i < listLyric.length; i++) {
+                      combinedList.add({
+                        'lyric': listLyric[i],
+                        'time': listTime.length > i ? listTime[i] : "0",
+                      });
+                    }
+
+                    return Padding(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                      child: Row(
+                        children: combinedList.map((e) {
+                          final lyric = e['lyric'].toString();
+                          final time = double.parse(e['time'].toString());
+                          final isHighlighted =
+                              position.inSeconds * 1000 >= time * 1000;
+                          return AnimatedOpacity(
+                            opacity: isHighlighted ? 1.0 : 0.4,
+                            duration: Duration(milliseconds: 1000),
+                            child: Text(
+                              lyric,
+                              style: TextStyle(
+                                fontSize: 16,
+                                foreground: Paint()
+                                  ..shader = isHighlighted
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Colors.white,
+                                            Colors.transparent
+                                          ],
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                        ).createShader(
+                                          Rect.fromLTWH(100.0, 100.0, 200.0, 70.0))
+                                      : const LinearGradient(
+                                          colors: [Colors.white, Colors.white],
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                        ).createShader(
+                                          Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     );
                   },
                 ),
               ),
-            ), Padding(
+            ),
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
